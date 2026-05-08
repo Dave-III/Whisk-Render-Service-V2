@@ -1,0 +1,19 @@
+# Frontend
+frontend/node_modules
+frontend/.next
+
+# Python
+backend/venv
+__pycache__
+
+# Generated media
+backend/uploads
+backend/temp
+backend/outputs
+
+# OAuth
+backend/token.pickle
+backend/client_secret.json
+
+# OS
+.DS_Store

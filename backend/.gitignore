@@ -1,0 +1,33 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# Environment variables
+.env
+
+# YouTube OAuth
+client_secret.json
+token.json
+token.pickle
+
+# Generated media
+uploads/
+outputs/
+temp/
+
+# Media files (just in case)
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.webm
+
+# macOS
+.DS_Store
+
+# VS Code
+.vscode/
+
+# Logs
+*.log
