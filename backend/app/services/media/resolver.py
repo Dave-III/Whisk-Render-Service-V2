@@ -1,6 +1,6 @@
 from pathlib import Path
 from fastapi import UploadFile
-from app.services.uploads.saver import (
+from app.services.storage.saver import (
     save_upload_file
 )
 from app.services.medal.downloader import (
