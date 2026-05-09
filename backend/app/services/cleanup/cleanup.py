@@ -10,7 +10,7 @@ DIRECTORIES = [
 
 
 def cleanup_old_files(
-    max_age_hours: int = 1
+    max_age_hours: int = 0
 ):
 
     cutoff_time = datetime.now() - timedelta(
