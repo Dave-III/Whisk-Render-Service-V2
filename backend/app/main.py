@@ -36,8 +36,8 @@ cleanup_old_files()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-    "https://whiskeditor.vercel.app"
-],
+        "https://whisk-video-editor-obb20ymmi-dave-iiis-projects.vercel.app",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
