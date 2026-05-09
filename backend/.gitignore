@@ -6,6 +6,10 @@ __pycache__/
 # Environment variables
 .env
 
+# YouTube OAuth
+client_secret.json
+token.json
+token.pickle
 
 # Generated media
 uploads/
