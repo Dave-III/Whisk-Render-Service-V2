@@ -12,7 +12,7 @@ def detect_white_flashes(
         
     video_path: Path,
     brightness_threshold: float = 240,
-    white_ratio_threshold: float = 0.80,
+    white_ratio_threshold: float = 0.60,
     sample_rate: int = 5,
     analysis_seconds: int = 60,
     minimum_gap_seconds: float = 1.5

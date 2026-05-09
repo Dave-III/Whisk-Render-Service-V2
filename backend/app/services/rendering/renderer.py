@@ -6,6 +6,9 @@ import uuid
 from app.services.media_analysis.trim_calculator import (
     calculate_trim_start
 )
+from app.services.media_analysis.metadata import (
+    get_video_metadata
+)
 
 
 OUTPUT_DIR = Path("outputs")
@@ -70,6 +73,50 @@ def render_side_by_side(
         clip1_trim = 0
         clip2_trim = 0
 
+    clip1_metadata = get_video_metadata(
+        clip1_path
+    )
+
+    clip2_metadata = get_video_metadata(
+        clip2_path
+    )
+
+    print("\n--- CLIP 1 METADATA ---")
+    print(clip1_metadata)
+
+    print("\n--- CLIP 2 METADATA ---")
+    print(clip2_metadata)
+
+
+    #
+    # Dynamic FPS
+    #
+
+    clip1_metadata = get_video_metadata(
+        clip1_path
+    )
+
+    clip2_metadata = get_video_metadata(
+        clip2_path
+    )
+
+    target_fps = min(
+        round(clip1_metadata["fps"]),
+        round(clip2_metadata["fps"])
+    )
+
+    #
+    # Safety fallback
+    #
+
+    if target_fps <= 0:
+        target_fps = 30
+
+    print(
+        f"\n=== TARGET FPS ===\n"
+        f"{target_fps}"
+    )
+
     #
     # Output file
     #
@@ -92,19 +139,11 @@ def render_side_by_side(
 
         "-y",
 
-        #
-        # Clip 1
-        #
-
         "-ss",
         str(clip1_trim),
 
         "-i",
         str(clip1_path),
-
-        #
-        # Clip 2
-        #
 
         "-ss",
         str(clip2_trim),
@@ -112,6 +151,11 @@ def render_side_by_side(
         "-i",
         str(clip2_path),
 
+        "-loop",
+        "1",
+
+        "-i",
+        "assets/background.png",
         #
         # Video stacking
         #
@@ -119,12 +163,43 @@ def render_side_by_side(
         "-filter_complex",
 
         (
-            "[0:v]scale=960:540[left];"
+            #
+            # Background canvas
+            #
 
-            "[1:v]scale=960:540[right];"
+            "[2:v]scale=1920:1080[bg];"
 
-            "[left][right]"
-            "hstack=inputs=2[v]"
+            #
+            # Left clip
+            #
+
+            "[0:v]"
+            "scale=900:506"
+            "[left];"
+
+            #
+            # Right clip
+            #
+
+            "[1:v]"
+            "scale=900:506"
+            "[right];"
+
+            #
+            # Overlay left clip
+            #
+
+            "[bg][left]"
+            "overlay=x=40:y=287"
+            "[temp];"
+
+            #
+            # Overlay right clip
+            #
+
+            "[temp][right]"
+            "overlay=x=980:y=287"
+            "[v]"
         ),
 
         #
@@ -135,27 +210,66 @@ def render_side_by_side(
         "[v]",
 
         #
-        # Audio from clip1
+        # Explicit audio track from clip1
         #
 
         "-map",
-        "0:a?",
+        "0:a:0?",
 
         #
-        # Encoding
+        # Video codec
         #
 
         "-c:v",
         "libx264",
 
+        "-r",
+        str(target_fps),
+
+        "-vsync",
+        "cfr",
+
+        #
+        # Audio codec
+        #
+
         "-c:a",
         "aac",
 
+        #
+        # Audio bitrate
+        #
+
+        "-b:a",
+        "192k",
+
+        #
+        # Audio compatibility
+        #
+
+        "-ar",
+        "48000",
+
+        "-ac",
+        "2",
+
+        #
+        # Performance
+        #
+
         "-preset",
-        "fast",
+        "ultrafast",
+
+        #
+        # Quality
+        #
 
         "-crf",
-        "23",
+        "28",
+
+        #
+        # Sync handling
+        #
 
         "-shortest",
 
@@ -165,10 +279,6 @@ def render_side_by_side(
 
         "-movflags",
         "+faststart",
-
-        #
-        # Output
-        #
 
         str(output_path)
     ]
@@ -188,12 +298,41 @@ def render_side_by_side(
     #
 
     try:
+        audio_test = subprocess.run(
+
+            [
+                "ffprobe",
+                "-i",
+                str(clip1_path),
+                "-show_streams",
+                "-select_streams",
+                "a",
+            ],
+
+            capture_output=True,
+            text=True,
+        )
+
+        print("\n=== AUDIO STREAMS ===")
+        print(audio_test.stdout)
 
         subprocess.run(
             ffmpeg_command,
             check=True,
             capture_output=True,
             text=True
+        )
+        print("\n=== OUTPUT AUDIO TEST ===")
+
+        subprocess.run(
+            [
+                "ffprobe",
+                "-i",
+                str(output_path),
+                "-show_streams",
+                "-select_streams",
+                "a",
+            ]
         )
 
     except subprocess.CalledProcessError as e:

@@ -22,7 +22,7 @@ from app.services.render_status import (
     set_render_error,
     get_render_status,
 )
-from app.services.uploads.saver import save_upload_file
+
 
 
 app = FastAPI(
@@ -70,66 +70,30 @@ async def render(
     try:
 
         start_render()
+        cleanup_old_files(
+            max_age_hours=0
+        )
 
         # -----------------------------------
-        # PREPARE CLIPS
+        # RESOLVE MEDIA
         # -----------------------------------
 
-        # -----------------------------------
-        # CLIP 1
-        # -----------------------------------
+        clip1_path = resolve_media_input(
+            clip1,
+            clip1_url,
+        )
 
-        if clip1_url:
-
-            clip1_path = download_video(
-                clip1_url
-            )
-
-        else:
-
-            if clip1 is None:
-                raise HTTPException(
-                    status_code=400,
-                    detail="Clip 1 missing",
-                )
-
-            clip1_path = await save_upload_file(
-                clip1
-            )
+        clip2_path = resolve_media_input(
+            clip2,
+            clip2_url,
+        )
 
         # -----------------------------------
-        # CLIP 2
-        # -----------------------------------
-
-        if clip2_url:
-
-            clip2_path = download_video(
-                clip2_url
-            )
-
-        else:
-
-            if clip2 is None:
-                raise HTTPException(
-                    status_code=400,
-                    detail="Clip 2 missing",
-                )
-
-            clip2_path = await save_upload_file(
-                clip2
-            )
-
-        # -----------------------------------
-        # AUTO SYNC
+        # SYNC STAGE
         # -----------------------------------
 
         if auto_sync:
-
             set_sync_stage()
-
-            # future sync orchestration here
-            # offsets = detect_sync(...)
-            # trim clips here
 
         # -----------------------------------
         # RENDER
@@ -137,15 +101,10 @@ async def render(
 
         set_render_stage()
 
-        output_path = (
-            OUTPUT_DIR /
-            f"{uuid4()}.mp4"
-        )
-
-        render_side_by_side(
-            left_video=clip1_path,
-            right_video=clip2_path,
-            output_path=output_path,
+        output_path = render_side_by_side(
+            clip1_path,
+            clip2_path,
+            enable_auto_sync=auto_sync,
         )
 
         # -----------------------------------
@@ -161,6 +120,7 @@ async def render(
         finish_render()
 
         return {
+
             "success": True,
 
             "output_video":
@@ -178,7 +138,6 @@ async def render(
             status_code=500,
             detail=str(e),
         )
-
 
 
 @app.get("/download/{filename}")
@@ -200,7 +159,10 @@ async def download_video(filename: str):
 
 @app.post("/upload-youtube")
 async def upload_to_youtube(
-    filename: str = Form(...)
+
+    filename: str = Form(...),
+
+    title: str = Form(...),
 ):
 
     file_path = OUTPUT_DIR / filename
@@ -214,7 +176,10 @@ async def upload_to_youtube(
 
     try:
 
-        youtube_url = upload_video(file_path)
+        youtube_url = upload_video(
+            file_path,
+            title,
+        )
 
     except Exception as e:
 
