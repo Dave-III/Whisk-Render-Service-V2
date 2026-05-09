@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from app.services.media_analysis.sync_detector import (
-    detect_reset_events
+from app.services.media_analysis.flash_detector import (
+    detect_white_flashes
 )
 
 
@@ -10,38 +10,63 @@ def calculate_trim_start(
     preroll_seconds: float = 5.0
 ):
 
-    reset_events = detect_reset_events(
+    flashes = detect_white_flashes(
         video_path
     )
-    print("\n=== RESET EVENTS ===")
 
-    for event in reset_events:
-
-        print(event)
-        
     #
-    # No reset found
+    # No flashes found
     #
 
-    if not reset_events:
+    if not flashes:
+
+        print(
+            "\nNo flashes detected"
+        )
 
         return {
+
             "trim_start": 0,
+
             "reset_event": None
         }
 
     #
-    # Most recent event
+    # Most recent flash
     #
 
-    latest_reset = reset_events[0]
+    latest_flash = flashes[0]
 
     trim_start = max(
-        latest_reset["timestamp"] - preroll_seconds,
+
+        latest_flash[
+            "timestamp"
+        ] - preroll_seconds,
+
         0
     )
 
+    #
+    # Debug
+    #
+
+    print("\n=== TRIM CALCULATION ===")
+
+    print(
+        f"Latest Flash: "
+        f"{latest_flash}"
+    )
+
+    print(
+        f"Trim Start: "
+        f"{trim_start:.2f}s"
+    )
+
     return {
-        "trim_start": trim_start,
-        "reset_event": latest_reset
+
+        "trim_start":
+            trim_start,
+
+        "reset_event":
+            latest_flash
     }
