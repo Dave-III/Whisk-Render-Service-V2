@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+from fastapi import FastAPI, UploadFile, BackgroundTasks, File, Form, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from uuid import uuid4
@@ -22,13 +22,16 @@ from app.services.render_status import (
     set_render_error,
     get_render_status,
 )
-
+from app.services.render_status import (
+    reset_render_status, render_status)
 
 
 app = FastAPI(
     title="Whisk Render Service",
     version="1.0"
 )
+
+cleanup_old_files()
 
 app.add_middleware(
     CORSMiddleware,
@@ -39,7 +42,7 @@ app.add_middleware(
 )
 
 @app.get("/render-status")
-async def render_status():
+async def get_render_status_route():
 
     return get_render_status()
 
@@ -56,27 +59,19 @@ def health_check():
         "healthy": True
     }
 
-@app.post("/render")
-async def render(
-    clip1: UploadFile | None = File(None),
-    clip2: UploadFile | None = File(None),
 
-    clip1_url: str | None = Form(None),
-    clip2_url: str | None = Form(None),
-
-    auto_sync: bool = Form(True),
+def process_render(
+    clip1,
+    clip2,
+    clip1_url,
+    clip2_url,
+    auto_sync,
+    output_name,
 ):
 
     try:
-
+        reset_render_status()
         start_render()
-        cleanup_old_files(
-            max_age_hours=0
-        )
-
-        # -----------------------------------
-        # RESOLVE MEDIA
-        # -----------------------------------
 
         clip1_path = resolve_media_input(
             clip1,
@@ -88,56 +83,71 @@ async def render(
             clip2_url,
         )
 
-        # -----------------------------------
-        # SYNC STAGE
-        # -----------------------------------
-
         if auto_sync:
             set_sync_stage()
-
-        # -----------------------------------
-        # RENDER
-        # -----------------------------------
 
         set_render_stage()
 
         output_path = render_side_by_side(
             clip1_path,
             clip2_path,
+            output_name=output_name,
             enable_auto_sync=auto_sync,
         )
 
-        # -----------------------------------
-        # FINALIZE
-        # -----------------------------------
-
         set_finalize_stage()
 
-        download_url = (
+        render_status["download_url"] = (
             f"/download/{output_path.name}"
         )
 
+        render_status["output_filename"] = (
+            output_path.name
+        )
+
         finish_render()
-
-        return {
-
-            "success": True,
-
-            "output_video":
-                str(output_path),
-
-            "download_url":
-                download_url,
-        }
 
     except Exception as e:
 
         set_render_error(str(e))
 
+@app.post("/render")
+async def render(
+
+    background_tasks: BackgroundTasks,
+
+    clip1: UploadFile | None = File(None),
+    clip2: UploadFile | None = File(None),
+
+    clip1_url: str | None = Form(None),
+    clip2_url: str | None = Form(None),
+
+    auto_sync: bool = Form(True),
+
+    output_name: str = Form(...),
+):
+    if render_status["is_rendering"]:
+
         raise HTTPException(
-            status_code=500,
-            detail=str(e),
+            status_code=409,
+            detail="Render already in progress"
         )
+    
+    background_tasks.add_task(
+
+        process_render,
+
+        clip1,
+        clip2,
+        clip1_url,
+        clip2_url,
+        auto_sync,
+        output_name,
+    )
+
+    return {
+        "success": True
+    }
 
 
 @app.get("/download/{filename}")

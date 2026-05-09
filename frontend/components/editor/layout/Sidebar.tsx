@@ -1,10 +1,19 @@
 "use client"
 
-import { useMemo } from "react"
-import { renderVideo } from "@/services/renderService"
+import { useEffect, useMemo } from "react"
+import { renderVideo, getRenderStatus } from "@/services/renderStatusService"
 import { useEditorStore } from "@/store/editorStore"
 
+
 type Props = {
+  renderStage: string
+  setRenderStage: (value: string) => void
+
+  renderProgress: number
+  setRenderProgress: (value: number) => void
+
+  renderError: string | null
+  setRenderError: (value: string | null) => void
   autoSync: boolean
   setAutoSync: (value: boolean) => void
 
@@ -30,6 +39,15 @@ type Props = {
 }
 
 export default function Sidebar({
+  renderStage,
+  setRenderStage,
+
+  renderProgress,
+  setRenderProgress,
+
+  renderError,
+  setRenderError,
+
   autoSync,
   setAutoSync,
 
@@ -71,27 +89,103 @@ export default function Sidebar({
     return `${levelName} ${runTime} | Foam: ${foamPlayer} | Luna: ${lunaPlayer}`
   }, [levelName, runTime, foamPlayer, lunaPlayer])
 
+  useEffect(() => {
+
+    if (!loading) return
+
+    const interval = setInterval(async () => {
+
+      try {
+
+        const status = await getRenderStatus()
+
+        setRenderStage(status.stage)
+
+        setRenderProgress(status.progress)
+
+        setRenderError(status.error)
+
+        if (!status.is_rendering) {
+          if (status.download_url) {
+
+            setDownloadUrl(
+              `http://localhost:8000${status.download_url}`
+            )
+
+          }
+
+          if (status.output_filename) {
+
+            setOutputFilename(
+              status.output_filename
+            )
+
+          }
+
+          setLoading(false)
+          clearInterval(interval)
+
+        }
+
+      } catch (error) {
+
+        console.error(error)
+
+      }
+
+    }, 500)
+
+    return () => clearInterval(interval)
+
+  }, [
+    loading,
+    setRenderStage,
+    setRenderProgress,
+    setRenderError,
+  ])
+
   async function handleRender() {
     try {
+      setLoading(false)
+
+      if (!levelName || !runTime) {
+        alert("Level name and runtime required")
+        return
+      }
+
+      if (!clip1 && !clip1Url) {
+        alert("Clip 1 missing")
+        return
+      }
+
+      if (!clip2 && !clip2Url) {
+        alert("Clip 2 missing")
+        return
+      }
+
       setLoading(true)
       setYoutubeUrl("")
       setDownloadUrl("")
       setOutputFilename("")
 
-      const result = await renderVideo(
+
+
+      await renderVideo(
         clip1,
         clip2,
         clip1Url,
-        clip2Url
+        clip2Url,
+        autoSync,
+        `${levelName}_${runTime}`
       )
 
-      setDownloadUrl(`http://localhost:8000${result.download_url}`)
-      setOutputFilename(result.output_video.split("/").pop() ?? "")
     } catch (error) {
+
       console.error(error)
-      alert("Render failed")
-    } finally {
+
       setLoading(false)
+
+      alert("Render failed")
     }
   }
 

@@ -3,7 +3,13 @@
 import { useEffect, useState } from "react"
 import { useEditorStore } from "@/store/editorStore"
 
-export default function PreviewPanel() {
+type Props = {
+  renderedVideoUrl?: string
+}
+
+export default function PreviewPanel({
+  renderedVideoUrl,
+}: Props) {
   const {
     clip1,
     clip2,
@@ -11,7 +17,7 @@ export default function PreviewPanel() {
     clip2Url,
     focusedVideo,
     setFocusedVideo,
-  } = useEditorStore()
+} = useEditorStore()
 
 const [localClip1Url, setLocalClip1Url] = useState("")
 const [localClip2Url, setLocalClip2Url] = useState("")
@@ -70,7 +76,37 @@ useEffect(() => {
 
   const canPreviewClip1 = !!localClip1Url || isDirectVideoUrl(clip1Url)
   const canPreviewClip2 = !!localClip2Url || isDirectVideoUrl(clip2Url)
+  if (renderedVideoUrl) {
 
+    return (
+      <div className="flex-1 min-w-0 h-full p-2">
+
+        <div className="w-full h-full bg-zinc-950 rounded-lg border border-zinc-800 overflow-hidden">
+
+          <div className="w-full h-full p-2">
+
+            <div className="relative w-full h-full rounded-lg overflow-hidden border border-zinc-800 bg-black">
+
+              <video
+                src={renderedVideoUrl}
+                controls
+                autoPlay
+                className="w-full h-full object-contain"
+              />
+
+              <div className="absolute top-3 left-3 bg-black/70 px-2 py-1 rounded text-xs text-white">
+                Final Render
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    )
+  }
   const layoutMode =
   focusedVideo
     ? `focused-${focusedVideo}`

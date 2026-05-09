@@ -18,10 +18,12 @@ OUTPUT_DIR.mkdir(exist_ok=True)
 def render_side_by_side(
     clip1_path: Path,
     clip2_path: Path,
+    output_name: str,
     enable_auto_sync: bool = True,
     preroll_seconds: float = 5.0
+    
 ):
-
+    
     #
     # Synchronization analysis
     #
@@ -88,17 +90,6 @@ def render_side_by_side(
     print(clip2_metadata)
 
 
-    #
-    # Dynamic FPS
-    #
-
-    clip1_metadata = get_video_metadata(
-        clip1_path
-    )
-
-    clip2_metadata = get_video_metadata(
-        clip2_path
-    )
 
     target_fps = min(
         round(clip1_metadata["fps"]),
@@ -121,8 +112,18 @@ def render_side_by_side(
     # Output file
     #
 
+    #
+    # Safe output filename
+    #
+    import re
+    safe_name = re.sub(
+        r'[<>:"/\\\\|?*]',
+        "_",
+        output_name
+    )
+
     output_filename = (
-        f"{uuid.uuid4()}.mp4"
+        f"{safe_name}.mp4"
     )
 
     output_path = (
@@ -258,14 +259,14 @@ def render_side_by_side(
         #
 
         "-preset",
-        "ultrafast",
+        "veryfast",
 
         #
         # Quality
         #
 
         "-crf",
-        "28",
+        "23",
 
         #
         # Sync handling

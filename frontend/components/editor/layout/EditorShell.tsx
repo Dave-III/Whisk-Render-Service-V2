@@ -4,6 +4,8 @@ import PreviewPanel from "./PreviewPanel"
 import InspectorPanel from "./InspectorPanel"
 
 type Props = {
+  onGenerateYoutube: () => void
+  generatedTitle: string
   autoSync: boolean
   setAutoSync: (value: boolean) => void
 
@@ -30,6 +32,17 @@ type Props = {
 
   outputFilename: string
   setOutputFilename: (value: string) => void
+
+  renderStage: string
+  setRenderStage: (value: string) => void
+
+  renderProgress: number
+  setRenderProgress: (value: number) => void
+
+  renderError: string | null
+  setRenderError: (value: string | null) => void
+
+  youtubeUploading: boolean
 }
 
 export default function EditorShell(props: Props) {
@@ -40,9 +53,20 @@ export default function EditorShell(props: Props) {
       <div className="flex flex-1 overflow-hidden p-2 gap-2">
         <Sidebar {...props} />
 
-        <PreviewPanel />
+        <PreviewPanel
+          renderedVideoUrl={props.downloadUrl}
+         />
 
-        <InspectorPanel />
+        <InspectorPanel
+          youtubeUploading={props.youtubeUploading}
+          renderStage={props.renderStage}
+          renderProgress={props.renderProgress}
+          renderError={props.renderError}
+          downloadUrl={props.downloadUrl}
+          youtubeUrl={props.youtubeUrl}
+          generatedTitle={props.generatedTitle}
+          onGenerateYoutube={props.onGenerateYoutube}
+        />
       </div>
     </div>
   )

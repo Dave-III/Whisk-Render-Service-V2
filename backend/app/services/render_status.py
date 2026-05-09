@@ -3,6 +3,8 @@ render_status = {
     "progress": 0,
     "is_rendering": False,
     "error": None,
+    "download_url": "",
+    "output_filename": "",
 }
 
 
@@ -12,6 +14,8 @@ def reset_render_status():
     render_status["progress"] = 0
     render_status["is_rendering"] = False
     render_status["error"] = None
+    render_status["download_url"] = ""
+    render_status["output_filename"] = ""
 
 
 def start_render():

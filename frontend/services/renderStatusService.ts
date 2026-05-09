@@ -1,10 +1,23 @@
 const API_URL = "http://localhost:8000"
 
+export async function getRenderStatus() {
+  const response = await fetch(`${API_URL}/render-status`)
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch render status")
+  }
+
+  return response.json()
+}
+
+
 export async function renderVideo(
   clip1: File | null,
   clip2: File | null,
   clip1Url?: string,
-  clip2Url?: string
+  clip2Url?: string,
+  autosync?: boolean,
+  outputName?: string
 ) {
   const formData = new FormData()
 
@@ -22,6 +35,12 @@ export async function renderVideo(
 
   if (clip2Url) {
     formData.append("clip2_url", clip2Url)
+  }
+
+  formData.append("auto_sync", String(autosync))
+
+  if (outputName) {
+    formData.append("output_name", outputName)
   }
 
   const response = await fetch(
