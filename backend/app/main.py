@@ -36,7 +36,7 @@ cleanup_old_files()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-    "[*]"
+    "https://whiskeditor.vercel.app"
 ],
     allow_credentials=True,
     allow_methods=["*"],
