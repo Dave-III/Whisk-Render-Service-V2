@@ -94,20 +94,33 @@ export default function InspectorPanel({
         <button
           onClick={onGenerateYoutube}
           disabled={youtubeUploading}
-          className="
+          className={`
             w-full
             rounded-md
-            bg-red-600
-            hover:bg-red-500
-            transition-colors
+            transition-all
             py-3
             text-sm
             font-semibold
             text-white
             mb-4
-          "
+
+            ${
+              youtubeUploading
+                ? `
+                  bg-zinc-800
+                  text-zinc-400
+                  cursor-not-allowed
+                `
+                : `
+                  bg-red-600
+                  hover:bg-red-500
+                `
+            }
+          `}
         >
-          Generate YouTube URL
+          {youtubeUploading
+            ? "Generating YouTube URL..."
+            : "Generate YouTube URL"}
         </button>
 
       )}
