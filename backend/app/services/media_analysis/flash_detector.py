@@ -9,6 +9,7 @@ from app.services.media_analysis.metadata import (
 
 
 def detect_white_flashes(
+        
     video_path: Path,
     brightness_threshold: float = 240,
     white_ratio_threshold: float = 0.80,
