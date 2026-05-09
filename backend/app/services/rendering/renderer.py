@@ -16,6 +16,7 @@ OUTPUT_DIR.mkdir(exist_ok=True)
 
 
 def render_side_by_side(
+    
     clip1_path: Path,
     clip2_path: Path,
     output_name: str,
@@ -27,6 +28,7 @@ def render_side_by_side(
     #
     # Synchronization analysis
     #
+    print("=== RENDERER VERSION: format=yuv420p fix active ===")
 
     if enable_auto_sync:
 
@@ -117,7 +119,7 @@ def render_side_by_side(
     #
     import re
     safe_name = re.sub(
-        r'[<>:"/\\\\|?*]',
+        r'[< >:"/\\\\|?*]',
         "_",
         output_name
     )
