@@ -1,75 +1,82 @@
 "use client"
 
-import { useState } from "react"
-
+import { useMemo } from "react"
 import { renderVideo } from "@/services/renderService"
-
 import { useEditorStore } from "@/store/editorStore"
 
-export default function Sidebar() {
+type Props = {
+  autoSync: boolean
+  setAutoSync: (value: boolean) => void
 
+  levelName: string
+  setLevelName: (value: string) => void
+
+  runTime: string
+  setRunTime: (value: string) => void
+
+  foamPlayer: string
+  setFoamPlayer: (value: string) => void
+
+  lunaPlayer: string
+  setLunaPlayer: (value: string) => void
+
+  loading: boolean
+  setLoading: (value: boolean) => void
+
+  setDownloadUrl: (value: string) => void
+  setYoutubeUrl: (value: string) => void
+
+  setOutputFilename: (value: string) => void
+}
+
+export default function Sidebar({
+  autoSync,
+  setAutoSync,
+
+  levelName,
+  setLevelName,
+
+  runTime,
+  setRunTime,
+
+  foamPlayer,
+  setFoamPlayer,
+
+  lunaPlayer,
+  setLunaPlayer,
+
+  loading,
+  setLoading,
+
+  setDownloadUrl,
+  setYoutubeUrl,
+  setOutputFilename,
+}: Props) {
   const {
     clip1,
     clip2,
-
     clip1Url,
     clip2Url,
-
     setClip1,
     setClip2,
-
     setClip1Url,
     setClip2Url,
   } = useEditorStore()
 
-  const [loading, setLoading] = useState(false)
-
-  const [youtubeUrl, setYoutubeUrl] = useState("")
-  const [downloadUrl, setDownloadUrl] = useState("")
-  const [outputFilename, setOutputFilename] = useState("")
-  
-  async function handleYoutubeUpload() {
-
-    try {
-
-      setLoading(true)
-
-      const formData = new FormData()
-
-      formData.append(
-        "filename",
-        outputFilename
-      )
-
-      const response = await fetch(
-        "http://localhost:8000/upload-youtube",
-        {
-          method: "POST",
-          body: formData,
-        }
-      )
-
-      const result = await response.json()
-
-      setYoutubeUrl(result.youtube_url)
-
-    } catch (error) {
-
-      console.error(error)
-
-      alert("YouTube upload failed")
-
-    } finally {
-
-      setLoading(false)
+  const generatedTitle = useMemo(() => {
+    if (!levelName || !runTime || !foamPlayer || !lunaPlayer) {
+      return "Generated title preview..."
     }
-  }
+
+    return `${levelName} ${runTime} | Foam: ${foamPlayer} | Luna: ${lunaPlayer}`
+  }, [levelName, runTime, foamPlayer, lunaPlayer])
 
   async function handleRender() {
-
     try {
-
       setLoading(true)
+      setYoutubeUrl("")
+      setDownloadUrl("")
+      setOutputFilename("")
 
       const result = await renderVideo(
         clip1,
@@ -78,218 +85,152 @@ export default function Sidebar() {
         clip2Url
       )
 
-      setDownloadUrl(
-        `http://localhost:8000${result.download_url}`
-      )
-
-      setOutputFilename(
-        result.output_video.split("/").pop()
-      )
-
+      setDownloadUrl(`http://localhost:8000${result.download_url}`)
+      setOutputFilename(result.output_video.split("/").pop() ?? "")
     } catch (error) {
-
       console.error(error)
-
       alert("Render failed")
-
     } finally {
-
       setLoading(false)
     }
   }
 
   return (
-    <div className="h-full p-4 overflow-y-auto">
-
+    <div className="w-80 h-full border-r border-zinc-800 bg-zinc-950 p-4 overflow-y-auto">
       <h2 className="text-sm font-semibold text-white mb-6">
-        Media
+        Upload & Details
       </h2>
 
-      {/* CLIP 1 */}
-      <div className="mb-8">
+      <div className="space-y-6">
+        <div>
+          <div className="text-xs text-zinc-400 mb-2">Clip 1</div>
 
-        <label className="block text-xs text-zinc-400 mb-2">
-          Clip 1 Upload
-        </label>
-
-        <input
-          type="file"
-          accept="video/mp4"
-          onChange={(e) =>
-            setClip1(e.target.files?.[0] || null)
-          }
-          className="
-            mb-4
-            block
-            w-full
-            text-sm
-            text-zinc-300
-
-            file:mr-4
-            file:rounded-md
-            file:border-0
-
-            file:bg-zinc-800
-            file:px-4
-            file:py-2
-
-            file:text-sm
-            file:font-medium
-            file:text-white
-
-            hover:file:bg-zinc-900
-
-            file:transition-colors
-            file:cursor-pointer
-
-            cursor-pointer
-          "
-        />
-
-        {clip1 && (
-          <div className="mb-3 text-xs text-green-400 break-all">
-            {clip1.name}
-          </div>
-        )}
-
-        <input
-          type="text"
-          placeholder="Or Medal URL..."
-          value={clip1Url}
-          onChange={(e) =>
-            setClip1Url(e.target.value)
-          }
-          className="
-            w-full
-            bg-zinc-900
-            border
-            border-zinc-800
-            rounded-md
-            px-3
-            py-2
-            text-sm
-            outline-none
-            focus:border-blue-500
-          "
-        />
-
-      </div>
-
-      {/* CLIP 2 */}
-      <div className="mb-8">
-
-        <label className="block text-xs text-zinc-400 mb-2">
-          Clip 2 Upload
-        </label>
-
-        <input
-          type="file"
-          accept="video/mp4"
-          onChange={(e) =>
-            setClip2(e.target.files?.[0] || null)
-          }
-          className="
-            mb-4
-            block
-            w-full
-            text-sm
-            text-zinc-300
-
-            file:mr-4
-            file:rounded-md
-            file:border-0
-
-            file:bg-zinc-800
-            file:px-4
-            file:py-2
-
-            file:text-sm
-            file:font-medium
-            file:text-white
-
-            hover:file:bg-zinc-900
-
-            file:transition-colors
-            file:cursor-pointer
-
-            cursor-pointer
-          "
-        />
-
-        {clip2 && (
-          <div className="mb-3 text-xs text-green-400 break-all">
-            {clip2.name}
-          </div>
-        )}
-
-        <input
-          type="text"
-          placeholder="Or Medal URL..."
-          value={clip2Url}
-          onChange={(e) =>
-            setClip2Url(e.target.value)
-          }
-          className="
-            w-full
-            bg-zinc-900
-            border
-            border-zinc-800
-            rounded-md
-            px-3
-            py-2
-            text-sm
-            outline-none
-            focus:border-blue-500
-          "
-        />
-
-      </div>
-
-      {/* RENDER BUTTON */}
-      <button
-        onClick={handleRender}
-        disabled={loading}
-        className="
-          w-full
-          bg-blue-600
-          hover:bg-blue-500
-          disabled:bg-zinc-700
-          disabled:cursor-not-allowed
-          transition-colors
-          rounded-md
-          py-2
-          text-sm
-          font-medium
-        "
-      >
-        {loading ? "Rendering..." : "Render Video"}
-      </button>
-
-      {/* RESULT */}
-      {youtubeUrl && (
-        <div className="mt-6">
-
-          <div className="text-xs text-zinc-400 mb-2">
-            YouTube URL
-          </div>
-
-          <a
-            href={youtubeUrl}
-            target="_blank"
+          <input
+            type="file"
+            accept="video/mp4"
+            onChange={(e) => setClip1(e.target.files?.[0] || null)}
             className="
-              block
-              text-sm
-              text-blue-400
-              break-all
-              hover:text-blue-300
+              block w-full text-sm text-zinc-300
+              file:mr-4 file:rounded-md file:border-0
+              file:bg-zinc-800 file:px-4 file:py-2
+              file:text-sm file:font-medium file:text-white
+              hover:file:bg-zinc-900 file:transition-colors
+              file:cursor-pointer cursor-pointer
             "
-          >
-            {youtubeUrl}
-          </a>
+          />
 
+          {clip1 && (
+            <div className="mt-2 text-xs text-green-400 break-all">
+              {clip1.name}
+            </div>
+          )}
+
+          <input
+            type="text"
+            placeholder="Or paste Clip 1 URL"
+            value={clip1Url}
+            onChange={(e) => setClip1Url(e.target.value)}
+            className="mt-3 w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-blue-500"
+          />
         </div>
-      )}
 
+        <div>
+          <div className="text-xs text-zinc-400 mb-2">Clip 2</div>
+
+          <input
+            type="file"
+            accept="video/mp4"
+            onChange={(e) => setClip2(e.target.files?.[0] || null)}
+            className="
+              block w-full text-sm text-zinc-300
+              file:mr-4 file:rounded-md file:border-0
+              file:bg-zinc-800 file:px-4 file:py-2
+              file:text-sm file:font-medium file:text-white
+              hover:file:bg-zinc-900 file:transition-colors
+              file:cursor-pointer cursor-pointer
+            "
+          />
+
+          {clip2 && (
+            <div className="mt-2 text-xs text-green-400 break-all">
+              {clip2.name}
+            </div>
+          )}
+
+          <input
+            type="text"
+            placeholder="Or paste Clip 2 URL"
+            value={clip2Url}
+            onChange={(e) => setClip2Url(e.target.value)}
+            className="mt-3 w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-blue-500"
+          />
+        </div>
+
+        <label className="flex items-center gap-3 text-sm text-zinc-300">
+          <input
+            type="checkbox"
+            checked={autoSync}
+            onChange={(e) => setAutoSync(e.target.checked)}
+          />
+          Auto-sync runs
+        </label>
+
+        <div className="space-y-3">
+          <input
+            type="text"
+            placeholder="Level Name"
+            value={levelName}
+            onChange={(e) => setLevelName(e.target.value)}
+            className="w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-blue-500"
+          />
+
+          <input
+            type="text"
+            placeholder="Run Time (12.483)"
+            value={runTime}
+            onChange={(e) => setRunTime(e.target.value)}
+            className="w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-blue-500"
+          />
+
+          <input
+            type="text"
+            placeholder="Foam Player"
+            value={foamPlayer}
+            onChange={(e) => setFoamPlayer(e.target.value)}
+            className="w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-blue-500"
+          />
+
+          <input
+            type="text"
+            placeholder="Luna Player"
+            value={lunaPlayer}
+            onChange={(e) => setLunaPlayer(e.target.value)}
+            className="w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-blue-500"
+          />
+        </div>
+
+        <div>
+          <div className="text-xs text-zinc-400 mb-2">
+            Generated Title
+          </div>
+
+          <div className="rounded-md border border-zinc-800 bg-zinc-900 p-3 text-sm text-white break-words">
+            {generatedTitle}
+          </div>
+        </div>
+
+        <button
+          onClick={handleRender}
+          disabled={loading}
+          className="
+            w-full rounded-md bg-blue-600 hover:bg-blue-500
+            disabled:bg-zinc-700 disabled:cursor-not-allowed
+            transition-colors py-3 text-sm font-semibold text-white
+          "
+        >
+          {loading ? "Rendering..." : "Render Video"}
+        </button>
+      </div>
     </div>
   )
 }
