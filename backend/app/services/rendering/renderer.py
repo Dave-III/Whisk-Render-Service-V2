@@ -168,7 +168,7 @@ def render_side_by_side(
             # Background canvas
             #
 
-            "[2:v]scale=1920:1080[bg];"
+            "[2:v]scale=1920:1080,format=yuv420p[bg];"
 
             #
             # Left clip
@@ -227,7 +227,7 @@ def render_side_by_side(
         "-r",
         str(target_fps),
 
-        "-vsync",
+        "-fps_mode",
         "cfr",
 
         #
