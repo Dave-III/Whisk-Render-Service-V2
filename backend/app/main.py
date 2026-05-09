@@ -2,18 +2,18 @@ from fastapi import FastAPI, UploadFile, BackgroundTasks, File, Form, HTTPExcept
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from uuid import uuid4
-from app.services.cleanup.cleanup import (
+from .services.cleanup.cleanup import (
     cleanup_old_files
 )
-from app.services.media.resolver import (
+from .services.media.resolver import (
     resolve_media_input
 )
-from app.services.youtube.uploader import upload_video
-from app.services.rendering.renderer import (
+from .services.youtube.uploader import upload_video
+from .services.rendering.renderer import (
     render_side_by_side,
     OUTPUT_DIR
 )
-from app.services.render_status import (
+from .services.render_status import (
     start_render,
     set_sync_stage,
     set_render_stage,
@@ -22,7 +22,7 @@ from app.services.render_status import (
     set_render_error,
     get_render_status,
 )
-from app.services.render_status import (
+from .services.render_status import (
     reset_render_status, render_status)
 
 
@@ -36,7 +36,7 @@ cleanup_old_files()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://whisk-video-editor-obb20ymmi-dave-iiis-projects.vercel.app",
+        "*"
     ],
     allow_credentials=True,
     allow_methods=["*"],

@@ -1,9 +1,9 @@
 from pathlib import Path
 from fastapi import UploadFile
-from app.services.storage.saver import (
+from ..storage.saver import (
     save_upload_file
 )
-from app.services.medal.downloader import (
+from ..medal.downloader import (
     download_medal_clip
 )
 MAX_FILE_SIZE = 200 * 1024 * 1024 # 200MB
