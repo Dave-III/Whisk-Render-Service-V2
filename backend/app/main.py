@@ -1,6 +1,7 @@
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
+from uuid import uuid4
 from app.services.cleanup.cleanup import (
     cleanup_old_files
 )
@@ -12,6 +13,16 @@ from app.services.rendering.renderer import (
     render_side_by_side,
     OUTPUT_DIR
 )
+from app.services.render_status import (
+    start_render,
+    set_sync_stage,
+    set_render_stage,
+    set_finalize_stage,
+    finish_render,
+    set_render_error,
+    get_render_status,
+)
+from app.services.uploads.saver import save_upload_file
 
 
 app = FastAPI(
@@ -27,6 +38,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/render-status")
+async def render_status():
+
+    return get_render_status()
+
 @app.get("/")
 def root():
     return {
@@ -41,90 +57,127 @@ def health_check():
     }
 
 @app.post("/render")
-async def render_video(
-
+async def render(
     clip1: UploadFile | None = File(None),
     clip2: UploadFile | None = File(None),
 
     clip1_url: str | None = Form(None),
     clip2_url: str | None = Form(None),
 
-    level_name: str | None = Form(None),
-    run_time: str | None = Form(None),
-
-    foam_player: str | None = Form(None),
-    luna_player: str | None = Form(None),
+    auto_sync: bool = Form(True),
 ):
-    cleanup_old_files()
 
-    video_title = (
-        f"{level_name} — "
-        f"{run_time} | "
-        f"Foam: {foam_player} | "
-        f"Luna: {luna_player}"
-    )
-
-    if clip1 and clip1_url:
-        raise HTTPException(
-            status_code=400,
-            detail="Provide either clip1 upload OR clip1_url, not both"
-        )
-
-    if not clip1 and not clip1_url:
-        raise HTTPException(
-            status_code=400,
-            detail="clip1 upload or clip1_url is required"
-        )
-
-
-    if clip2 and clip2_url:
-        raise HTTPException(
-            status_code=400,
-            detail="Provide either clip2 upload OR clip2_url, not both"
-        )
-
-    if not clip2 and not clip2_url:
-        raise HTTPException(
-            status_code=400,
-            detail="clip2 upload or clip2_url is required"
-        )
-
-    clip1_path = resolve_media_input(
-        clip1,
-        clip1_url
-)
-
-    clip2_path = resolve_media_input(
-        clip2,
-        clip2_url
-    )
     try:
 
-        output_path = render_side_by_side(
-            clip1_path,
-            clip2_path
+        start_render()
+
+        # -----------------------------------
+        # PREPARE CLIPS
+        # -----------------------------------
+
+        # -----------------------------------
+        # CLIP 1
+        # -----------------------------------
+
+        if clip1_url:
+
+            clip1_path = download_video(
+                clip1_url
+            )
+
+        else:
+
+            if clip1 is None:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Clip 1 missing",
+                )
+
+            clip1_path = await save_upload_file(
+                clip1
+            )
+
+        # -----------------------------------
+        # CLIP 2
+        # -----------------------------------
+
+        if clip2_url:
+
+            clip2_path = download_video(
+                clip2_url
+            )
+
+        else:
+
+            if clip2 is None:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Clip 2 missing",
+                )
+
+            clip2_path = await save_upload_file(
+                clip2
+            )
+
+        # -----------------------------------
+        # AUTO SYNC
+        # -----------------------------------
+
+        if auto_sync:
+
+            set_sync_stage()
+
+            # future sync orchestration here
+            # offsets = detect_sync(...)
+            # trim clips here
+
+        # -----------------------------------
+        # RENDER
+        # -----------------------------------
+
+        set_render_stage()
+
+        output_path = (
+            OUTPUT_DIR /
+            f"{uuid4()}.mp4"
         )
 
-    except ValueError as e:
-
-        raise HTTPException(
-            status_code=400,
-            detail=str(e)
+        render_side_by_side(
+            left_video=clip1_path,
+            right_video=clip2_path,
+            output_path=output_path,
         )
+
+        # -----------------------------------
+        # FINALIZE
+        # -----------------------------------
+
+        set_finalize_stage()
+
+        download_url = (
+            f"/download/{output_path.name}"
+        )
+
+        finish_render()
+
+        return {
+            "success": True,
+
+            "output_video":
+                str(output_path),
+
+            "download_url":
+                download_url,
+        }
 
     except Exception as e:
 
+        set_render_error(str(e))
+
         raise HTTPException(
             status_code=500,
-            detail=str(e)
+            detail=str(e),
         )
-
-    return {
-        "message": "Render completed successfully",
-        "output_video": str(output_path),
-        "download_url": f"/download/{output_path.name}",
-        "youtube_url": None
-    }
 
 
 
