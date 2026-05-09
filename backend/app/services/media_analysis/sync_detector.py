@@ -65,5 +65,18 @@ def detect_reset_events(
         key=lambda x: x["timestamp"],
         reverse=True
     )
+    print("\n=== FLASHES ===")
 
+    for flash in flashes:
+        print(flash)
+
+    print("\n=== AUDIO SPIKES ===")
+
+    for spike in spikes:
+        print(spike)
+
+    print("\n=== RESET EVENTS ===")
+
+    for event in reset_events:
+        print(event)
     return reset_events

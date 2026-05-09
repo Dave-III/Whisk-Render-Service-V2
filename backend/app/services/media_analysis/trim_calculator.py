@@ -13,7 +13,12 @@ def calculate_trim_start(
     reset_events = detect_reset_events(
         video_path
     )
+    print("\n=== RESET EVENTS ===")
 
+    for event in reset_events:
+
+        print(event)
+        
     #
     # No reset found
     #

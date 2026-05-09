@@ -8,7 +8,7 @@ from app.services.media_analysis.metadata import (
 
 def detect_audio_spikes(
     video_path: Path,
-    spike_threshold: float = 0.6
+    spike_threshold: float = 0.2
 ):
     metadata = get_video_metadata(
         video_path

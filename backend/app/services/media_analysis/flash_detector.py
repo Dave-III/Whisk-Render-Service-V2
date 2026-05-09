@@ -9,7 +9,7 @@ from app.services.media_analysis.metadata import (
 def detect_white_flashes(
     video_path: Path,
     brightness_threshold: float = 240,
-    white_ratio_threshold: float = 0.75,
+    white_ratio_threshold: float = 0.45,
     sample_rate: int = 5
 ):
 
@@ -30,7 +30,7 @@ def detect_white_flashes(
         1
     )
 
-    frame_index = 0
+    frame_index = start_frame
 
     while True:
 
