@@ -46,7 +46,7 @@ export default function EditorPage() {
       )
 
       const response = await fetch(
-        "http://localhost:8000/upload-youtube",
+        `${process.env.NEXT_PUBLIC_API_URL}/upload-youtube`,
         {
           method: "POST",
           body: formData,

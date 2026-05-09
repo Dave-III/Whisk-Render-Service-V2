@@ -17,3 +17,6 @@ backend/client_secret.json
 
 # OS
 .DS_Store
+
+client_secret.json
+token.pickle

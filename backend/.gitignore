@@ -31,3 +31,6 @@ temp/
 
 # Logs
 *.log
+
+client_secret.json
+token.pickle

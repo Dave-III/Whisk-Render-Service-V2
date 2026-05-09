@@ -109,7 +109,7 @@ export default function Sidebar({
           if (status.download_url) {
 
             setDownloadUrl(
-              `http://localhost:8000${status.download_url}`
+              `${process.env.NEXT_PUBLIC_API_URL}${status.download_url}`
             )
 
           }
