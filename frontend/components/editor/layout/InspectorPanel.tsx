@@ -25,7 +25,7 @@ export default function InspectorPanel({
 }: Props) {
 
     const [copied, setCopied] = useState(false)
-    
+
   return (
 
     <div className="w-80 h-full border-l border-zinc-700 bg-zinc-900 p-4 overflow-y-auto">
@@ -179,8 +179,31 @@ export default function InspectorPanel({
         </div>
 
       )}
+      <div className="mt-10 pt-6 border-t border-zinc-800">
 
+        <div className="text-xs text-zinc-500 text-center">
+          Developed by Dave
+        </div>
+
+        <a
+          href="https://discord.gg/bVQ7ArnXJj"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="
+            mt-2
+            block
+            text-center
+            text-sm
+            text-blue-400
+            hover:text-blue-300
+            transition-colors
+          "
+        >
+          Join the Discord
+        </a>
+
+      </div>
     </div>
-
+  
   )
 }
