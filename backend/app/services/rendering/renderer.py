@@ -157,11 +157,10 @@ def render_side_by_side(
         "-filter_complex",
 
         (
-            "color=c=0x1a1a2e:s=1920x1080:r=30[bg];"
-            "[0:v]scale=900:506[left];"
-            "[1:v]scale=900:506[right];"
-            "[bg][left]overlay=x=40:y=287[temp];"
-            "[temp][right]overlay=x=980:y=287[v]"
+            "[0:v]scale=960:540[left];"
+            "[1:v]scale=960:540[right];"
+            "[left][right]hstack=inputs=2[stacked];"
+            "[stacked]pad=1920:1080:60:287:0x1a1a2e[v]"
         ),
 
         #
