@@ -190,7 +190,7 @@ export default function Sidebar({
   }
 
   return (
-    <div className="w-80 h-full border-r border-zinc-800 bg-zinc-950 p-4 overflow-y-auto">
+    <div className="w-80 h-full border-r border-zinc-700 bg-zinc-900 p-4 overflow-y-auto">
       <h2 className="text-sm font-semibold text-white mb-6">
         Upload & Details
       </h2>
@@ -208,7 +208,7 @@ export default function Sidebar({
               file:mr-4 file:rounded-md file:border-0
               file:bg-zinc-800 file:px-4 file:py-2
               file:text-sm file:font-medium file:text-white
-              hover:file:bg-zinc-900 file:transition-colors
+              hover:file:bg-zinc-800 file:transition-colors
               file:cursor-pointer cursor-pointer
             "
           />
@@ -224,7 +224,7 @@ export default function Sidebar({
             placeholder="Or paste Clip 1 URL"
             value={clip1Url}
             onChange={(e) => setClip1Url(e.target.value)}
-            className="mt-3 w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-blue-500"
+            className="mt-3 w-full rounded-md border border-zinc-800 bg-zinc-800 px-3 py-2 text-sm outline-none focus:border-blue-500"
           />
         </div>
 
@@ -256,7 +256,7 @@ export default function Sidebar({
             placeholder="Or paste Clip 2 URL"
             value={clip2Url}
             onChange={(e) => setClip2Url(e.target.value)}
-            className="mt-3 w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-blue-500"
+            className="mt-3 w-full rounded-md border border-zinc-800 bg-zinc-800 px-3 py-2 text-sm outline-none focus:border-blue-500"
           />
         </div>
 
@@ -275,7 +275,7 @@ export default function Sidebar({
             placeholder="Level Name"
             value={levelName}
             onChange={(e) => setLevelName(e.target.value)}
-            className="w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-blue-500"
+            className="w-full rounded-md border border-zinc-800 bg-zinc-800 px-3 py-2 text-sm outline-none focus:border-blue-500"
           />
 
           <input
@@ -283,7 +283,7 @@ export default function Sidebar({
             placeholder="Run Time (12.483)"
             value={runTime}
             onChange={(e) => setRunTime(e.target.value)}
-            className="w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-blue-500"
+            className="w-full rounded-md border border-zinc-800 bg-zinc-800 px-3 py-2 text-sm outline-none focus:border-blue-500"
           />
 
           <input
@@ -291,7 +291,7 @@ export default function Sidebar({
             placeholder="Foam Player"
             value={foamPlayer}
             onChange={(e) => setFoamPlayer(e.target.value)}
-            className="w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-blue-500"
+            className="w-full rounded-md border border-zinc-800 bg-zinc-800 px-3 py-2 text-sm outline-none focus:border-blue-500"
           />
 
           <input
@@ -299,7 +299,7 @@ export default function Sidebar({
             placeholder="Luna Player"
             value={lunaPlayer}
             onChange={(e) => setLunaPlayer(e.target.value)}
-            className="w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-blue-500"
+            className="w-full rounded-md border border-zinc-800 bg-zinc-800 px-3 py-2 text-sm outline-none focus:border-blue-500"
           />
         </div>
 
@@ -308,7 +308,7 @@ export default function Sidebar({
             Generated Title
           </div>
 
-          <div className="rounded-md border border-zinc-800 bg-zinc-900 p-3 text-sm text-white break-words">
+          <div className="rounded-md border border-zinc-800 bg-zinc-800 p-3 text-sm text-white break-words">
             {generatedTitle}
           </div>
         </div>
@@ -317,7 +317,7 @@ export default function Sidebar({
           onClick={handleRender}
           disabled={loading}
           className="
-            w-full rounded-md bg-blue-600 hover:bg-blue-500
+            w-full rounded-md bg-blue-600 hover:bg-blue-500 shadow-lg shadow-black/20
             disabled:bg-zinc-700 disabled:cursor-not-allowed
             transition-colors py-3 text-sm font-semibold text-white
           "

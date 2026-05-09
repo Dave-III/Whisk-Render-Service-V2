@@ -1,5 +1,7 @@
 "use client"
 
+import { useState } from "react"
+
 type Props = {
   renderStage: string
   renderProgress: number
@@ -22,9 +24,11 @@ export default function InspectorPanel({
   youtubeUploading,
 }: Props) {
 
+    const [copied, setCopied] = useState(false)
+    
   return (
 
-    <div className="w-80 h-full border-l border-zinc-800 bg-zinc-950 p-4 overflow-y-auto">
+    <div className="w-80 h-full border-l border-zinc-700 bg-zinc-900 p-4 overflow-y-auto">
 
       <h2 className="text-sm font-semibold text-white mb-6">
         Render Output
@@ -132,10 +136,19 @@ export default function InspectorPanel({
             YouTube URL
           </div>
 
-          <a
-            href={youtubeUrl}
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            onClick={async () => {
+
+              await navigator.clipboard.writeText(
+                youtubeUrl
+              )
+
+              setCopied(true)
+
+              setTimeout(() => {
+                setCopied(false)
+              }, 2000)
+            }}
             className="
               block
               w-full
@@ -150,11 +163,18 @@ export default function InspectorPanel({
               text-white
               break-all
               hover:border-blue-500
-              transition-colors
+              hover:bg-zinc-800
+              transition-all
             "
           >
             {youtubeUrl}
-          </a>
+          </button>
+
+          <div className="text-xs text-zinc-500 mt-2">
+            {copied
+              ? "Copied to clipboard!"
+              : "Click to copy link"}
+          </div>
 
         </div>
 

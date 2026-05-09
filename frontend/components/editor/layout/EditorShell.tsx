@@ -47,7 +47,7 @@ type Props = {
 
 export default function EditorShell(props: Props) {
   return (
-    <div className="h-screen bg-zinc-950 text-white flex flex-col overflow-hidden">
+    <div className="h-screen bg-zinc-900 text-white flex flex-col overflow-hidden">
       <Toolbar />
 
       <div className="flex flex-1 overflow-hidden p-2 gap-2">

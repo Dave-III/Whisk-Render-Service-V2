@@ -24,6 +24,8 @@ export default function EditorPage() {
 
   const [youtubeUploading, setYoutubeUploading] = useState(false)
 
+  const [copied, setCopied] = useState(false)
+
   async function handleYoutubeUpload() {
 
     if (!outputFilename) return

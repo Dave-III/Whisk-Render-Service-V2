@@ -81,7 +81,7 @@ useEffect(() => {
     return (
       <div className="flex-1 min-w-0 h-full p-2">
 
-        <div className="w-full h-full bg-zinc-950 rounded-lg border border-zinc-800 overflow-hidden">
+        <div className="w-full h-full bg-zinc-900 rounded-lg border border-zinc-800 overflow-hidden">
 
           <div className="w-full h-full p-2">
 
@@ -168,7 +168,7 @@ useEffect(() => {
 
   return (
     <div className="flex-1 min-w-0 h-full p-2">
-      <div className="w-full h-full bg-zinc-950 rounded-lg border border-zinc-800 overflow-hidden">
+      <div className="w-full h-full bg-zinc-900 rounded-lg border border-zinc-800 overflow-hidden">
         {!finalClip1Source && !finalClip2Source && (
           <div className="w-full h-full flex items-center justify-center text-zinc-500 text-sm">
             Video Preview
