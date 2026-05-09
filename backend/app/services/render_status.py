@@ -18,6 +18,7 @@ def reset_render_status():
     render_status["output_filename"] = ""
 
 
+
 def start_render():
 
     render_status["stage"] = (
