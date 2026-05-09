@@ -1,8 +1,5 @@
 from pathlib import Path
-
 import subprocess
-import uuid
-
 from app.services.media_analysis.trim_calculator import (
     calculate_trim_start
 )
@@ -28,7 +25,6 @@ def render_side_by_side(
     #
     # Synchronization analysis
     #
-    print("=== RENDERER VERSION: format=yuv420p fix active ===")
 
     if enable_auto_sync:
 
@@ -154,11 +150,6 @@ def render_side_by_side(
         "-i",
         str(clip2_path),
 
-        "-loop",
-        "1",
-
-        "-i",
-        "assets/background.png",
         #
         # Video stacking
         #
@@ -166,43 +157,11 @@ def render_side_by_side(
         "-filter_complex",
 
         (
-            #
-            # Background canvas
-            #
-
-            "[2:v]scale=1920:1080,format=yuv420p[bg];"
-
-            #
-            # Left clip
-            #
-
-            "[0:v]"
-            "scale=900:506"
-            "[left];"
-
-            #
-            # Right clip
-            #
-
-            "[1:v]"
-            "scale=900:506"
-            "[right];"
-
-            #
-            # Overlay left clip
-            #
-
-            "[bg][left]"
-            "overlay=x=40:y=287"
-            "[temp];"
-
-            #
-            # Overlay right clip
-            #
-
-            "[temp][right]"
-            "overlay=x=980:y=287"
-            "[v]"
+            "color=c=0x1a1a2e:s=1920x1080:r=30[bg];"
+            "[0:v]scale=900:506[left];"
+            "[1:v]scale=900:506[right];"
+            "[bg][left]overlay=x=40:y=287[temp];"
+            "[temp][right]overlay=x=980:y=287[v]"
         ),
 
         #
