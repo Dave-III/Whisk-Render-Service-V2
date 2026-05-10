@@ -60,28 +60,10 @@ def health_check():
     }
 
 
-def process_render(
-    clip1,
-    clip2,
-    clip1_url,
-    clip2_url,
-    auto_sync,
-    output_name,
-):
-
+def process_render(clip1_path, clip2_path, auto_sync, output_name):
     try:
         reset_render_status()
         start_render()
-
-        clip1_path = resolve_media_input(
-            clip1,
-            clip1_url,
-        )
-
-        clip2_path = resolve_media_input(
-            clip2,
-            clip2_url,
-        )
 
         if auto_sync:
             set_sync_stage()
@@ -96,58 +78,42 @@ def process_render(
         )
 
         set_finalize_stage()
-
-        render_status["download_url"] = (
-            f"/download/{output_path.name}"
-        )
-
-        render_status["output_filename"] = (
-            output_path.name
-        )
-
+        render_status["download_url"] = f"/download/{output_path.name}"
+        render_status["output_filename"] = output_path.name
         finish_render()
 
     except Exception as e:
-
         set_render_error(str(e))
 
 @app.post("/render")
 async def render(
-
     background_tasks: BackgroundTasks,
-
     clip1: UploadFile | None = File(None),
     clip2: UploadFile | None = File(None),
-
     clip1_url: str | None = Form(None),
     clip2_url: str | None = Form(None),
-
     auto_sync: bool = Form(True),
-
     output_name: str = Form(...),
 ):
     if render_status["is_rendering"]:
+        raise HTTPException(status_code=409, detail="Render already in progress")
 
-        raise HTTPException(
-            status_code=409,
-            detail="Render already in progress"
-        )
-    
+    # Save files NOW while the request context is still alive
+    clip1_path = resolve_media_input(clip1, clip1_url) if clip1 or clip1_url else None
+    clip2_path = resolve_media_input(clip2, clip2_url) if clip2 or clip2_url else None
+
+    if not clip1_path or not clip2_path:
+        raise HTTPException(status_code=400, detail="Both clips are required")
+
     background_tasks.add_task(
-
         process_render,
-
-        clip1,
-        clip2,
-        clip1_url,
-        clip2_url,
+        clip1_path,   # pass paths, not UploadFile objects
+        clip2_path,
         auto_sync,
         output_name,
     )
 
-    return {
-        "success": True
-    }
+    return {"success": True}
 
 
 @app.get("/download/{filename}")
