@@ -138,14 +138,8 @@ def render_side_by_side(
 
         "-y",
 
-        "-ss",
-        str(clip1_trim),
-
         "-i",
         str(clip1_path),
-
-        "-ss",
-        str(clip2_trim),
 
         "-i",
         str(clip2_path),
@@ -157,8 +151,9 @@ def render_side_by_side(
         "-filter_complex",
 
         (
-            "[0:v]scale=960:540[left];"
-            "[1:v]scale=960:540[right];"
+            f"[0:v]trim=start={clip1_trim},setpts=PTS-STARTPTS,scale=960:540[left];"
+            f"[1:v]trim=start={clip2_trim},setpts=PTS-STARTPTS,scale=960:540[right];"
+            f"[0:a]atrim=start={clip1_trim},asetpts=PTS-STARTPTS[a];"
             "[left][right]hstack=inputs=2[stacked];"
             "[stacked]pad=1920:1080:60:287:0x1a1a2e[v]"
         ),
@@ -167,8 +162,8 @@ def render_side_by_side(
         # Output mapping
         #
 
-        "-map",
-        "[v]",
+        "-map", "[v]",
+        "-map", "[a]",
 
         #
         # Explicit audio track from clip1
