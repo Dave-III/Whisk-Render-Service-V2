@@ -136,7 +136,7 @@ def render_side_by_side(
 
         # Map filtered video and audio only (no duplicate raw audio map)
         "-map", "[v]",
-        "-map", "[a]",
+        "-map", "0:a:0?",
 
         # Video codec
         "-c:v", "libx264",
@@ -183,12 +183,26 @@ def render_side_by_side(
         print("\n=== AUDIO STREAMS ===")
         print(audio_test.stdout)
 
-        subprocess.run(
+        result = subprocess.run(
             ffmpeg_command,
-            check=True,
             capture_output=True,
             text=True
         )
+
+        if result.returncode != 0:
+
+            print("\n=== FFMPEG COMMAND ===")
+            print(" ".join(ffmpeg_command))
+
+            print("\n=== FFMPEG STDOUT ===")
+            print(result.stdout)
+
+            print("\n=== FFMPEG STDERR ===")
+            print(result.stderr)
+
+            raise RuntimeError(
+                f"FFmpeg render failed:\n{result.stderr}"
+            )
 
         print("\n=== OUTPUT AUDIO TEST ===")
         subprocess.run(
@@ -198,14 +212,9 @@ def render_side_by_side(
             ]
         )
 
-    except subprocess.CalledProcessError as e:
-        print("\n=== FFMPEG ERROR ===")
-        print(e.stderr)
-        raise RuntimeError(f"FFmpeg render failed:\n{e.stderr}")
+    except Exception as e:
+        raise e
 
-    #
-    # Success
-    #
 
     print(f"\n=== RENDER COMPLETE ===\nOutput: {output_path}")
 

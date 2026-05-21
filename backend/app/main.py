@@ -93,7 +93,7 @@ async def render(
     clip1_url: str | None = Form(None),
     clip2_url: str | None = Form(None),
     auto_sync: bool = Form(True),
-    output_name: str = Form(...),
+    output_name: str = Form("rendered_output.mp4"),
 ):
     if render_status["is_rendering"]:
         raise HTTPException(status_code=409, detail="Render already in progress")

@@ -52,7 +52,9 @@ export async function renderVideo(
   )
 
   if (!response.ok) {
-    throw new Error("Render failed")
+    const errorText = await response.text()
+    console.error(errorText)
+    throw new Error(errorText)
   }
 
   return response.json()
