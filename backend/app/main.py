@@ -31,7 +31,7 @@ app = FastAPI(
     version="1.0"
 )
 
-cleanup_old_files()
+cleanup_old_files(max_age_hours=2)
 
 app.add_middleware(
     CORSMiddleware,
