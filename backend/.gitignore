@@ -15,6 +15,9 @@ token.pickle
 uploads/
 outputs/
 temp/
+data/
+jobs/
+secrets/
 
 # Media files (just in case)
 *.mp4

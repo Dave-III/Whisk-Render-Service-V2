@@ -6,6 +6,8 @@ from pathlib import Path
 import os
 import pickle
 
+from ..storage.paths import SECRETS_DIR
+
 
 SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
 
@@ -14,8 +16,9 @@ def get_youtube_service():
 
     credentials = None
 
-    if os.path.exists("token.pickle"):
-        with open("token.pickle", "rb") as token:
+    token_path = Path(os.getenv("YOUTUBE_TOKEN_FILE", SECRETS_DIR / "token.pickle"))
+    if token_path.is_file():
+        with token_path.open("rb") as token:
             credentials = pickle.load(token)
 
     if not credentials:

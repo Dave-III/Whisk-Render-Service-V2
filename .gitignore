@@ -10,6 +10,9 @@ __pycache__
 backend/uploads
 backend/temp
 backend/outputs
+backend/data
+backend/jobs
+backend/secrets
 
 # OAuth
 backend/token.pickle
