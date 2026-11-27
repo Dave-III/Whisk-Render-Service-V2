@@ -1,4 +1,3 @@
-import re
 import subprocess
 from pathlib import Path
 
@@ -10,14 +9,11 @@ from app.services.media_analysis.metadata import (
 )
 
 
-OUTPUT_DIR = Path("outputs")
-OUTPUT_DIR.mkdir(exist_ok=True)
-
-
 def render_side_by_side(
     clip1_path: Path,
     clip2_path: Path,
     output_name: str,
+    output_dir: Path,
     enable_auto_sync: bool = True,
     preroll_seconds: float = 5.0
 ):
@@ -94,9 +90,8 @@ def render_side_by_side(
     # Safe output filename — strip special chars including spaces
     #
 
-    safe_name = re.sub(r'[<> :"/\\|?*]', "_", output_name)
-    output_filename = f"{safe_name}.mp4"
-    output_path = OUTPUT_DIR / output_filename
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_path = output_dir / output_name
 
     #
     # FFmpeg command
@@ -186,7 +181,8 @@ def render_side_by_side(
         result = subprocess.run(
             ffmpeg_command,
             capture_output=True,
-            text=True
+            text=True,
+            timeout=3600,
         )
 
         if result.returncode != 0:
@@ -212,8 +208,9 @@ def render_side_by_side(
             ]
         )
 
-    except Exception as e:
-        raise e
+    except subprocess.TimeoutExpired as error:
+        output_path.unlink(missing_ok=True)
+        raise RuntimeError("FFmpeg render exceeded the one-hour limit") from error
 
 
     print(f"\n=== RENDER COMPLETE ===\nOutput: {output_path}")
