@@ -117,7 +117,11 @@ def process_render(job_id: str, job_dir: Path, clip1_path: Path, clip2_path: Pat
             job_dir,
             state="complete",
             updated_at=utc_now(),
-            output={"filename": output_path.name, "media_type": "video/mp4"},
+            output={
+                "filename": output_path.name,
+                "download_filename": safe_download_filename(output_name),
+                "media_type": "video/mp4",
+            },
         )
     except Exception as error:
         message = str(error).strip() or "The render failed. Try another pair of clips."
