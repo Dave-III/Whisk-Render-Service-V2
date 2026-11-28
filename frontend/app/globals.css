@@ -58,6 +58,9 @@ body {
 .editor-backdrop .border-zinc-700 { border-color: var(--line); }
 
 .editor-backdrop .text-white { color: var(--ink); }
+.editor-backdrop .bg-blue-600.text-white,
+.editor-backdrop .bg-red-600.text-white,
+.editor-backdrop .bg-green-600.text-white { color: #fff !important; }
 .editor-backdrop .text-zinc-300 { color: var(--ink-soft); }
 .editor-backdrop .text-zinc-400,
 .editor-backdrop .text-zinc-500 { color: var(--muted); }
