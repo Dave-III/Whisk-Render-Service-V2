@@ -1,6 +1,7 @@
 export default function Toolbar() {
   return (
     <div className="
+      editor-toolbar
       h-16
       border-b
       border-zinc-700
