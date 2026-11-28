@@ -12,7 +12,7 @@ from app.services.media_analysis.metadata import (
 BACKGROUND_IMAGE = (
     Path(__file__).resolve().parents[3]
     / "assets"
-    / "watercolor-video-background.jfif"
+    / "watercolor-video-background.jpg"
 )
 
 
