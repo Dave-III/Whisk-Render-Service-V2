@@ -171,7 +171,7 @@ def render_status_route(job_id: str | None = None):
             )
             status["queue_position"] = queue_position
             if queue_position is not None:
-                status["stage"] = f"Queued — position {queue_position}"
+                status["stage"] = f"Queued - position {queue_position}"
     else:
         status["queue_position"] = None
     return status
