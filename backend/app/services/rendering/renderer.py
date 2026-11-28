@@ -9,6 +9,13 @@ from app.services.media_analysis.metadata import (
 )
 
 
+BACKGROUND_IMAGE = (
+    Path(__file__).resolve().parents[3]
+    / "assets"
+    / "watercolor-video-background.jfif"
+)
+
+
 def render_side_by_side(
     clip1_path: Path,
     clip2_path: Path,
@@ -63,6 +70,9 @@ def render_side_by_side(
 
     print(f"\n=== TARGET FPS ===\n{target_fps}")
 
+    if not BACKGROUND_IMAGE.is_file():
+        raise RuntimeError(f"Render background image not found: {BACKGROUND_IMAGE}")
+
     #
     # Output duration — trim both clips to the same length
     #
@@ -108,25 +118,32 @@ def render_side_by_side(
         "-ss", str(pre_seek2),
         "-i", str(clip2_path),
 
+        # Loop the watercolor artwork as the video canvas background.
+        "-loop", "1",
+        "-framerate", str(target_fps),
+        "-i", str(BACKGROUND_IMAGE),
+
         "-filter_complex",
         (
             # Fine-trim + duration cap + scale for clip 1
             f"[0:v]trim=start={filter_trim1}:duration={output_duration},"
-            f"setpts=PTS-STARTPTS,scale=960:540[left];"
+            f"setpts=PTS-STARTPTS,scale=900:506[left];"
 
             # Fine-trim + duration cap + scale for clip 2
             f"[1:v]trim=start={filter_trim2}:duration={output_duration},"
-            f"setpts=PTS-STARTPTS,scale=960:540[right];"
+            f"setpts=PTS-STARTPTS,scale=900:506[right];"
 
             # Audio trim from clip 1 only
             f"[0:a]atrim=start={filter_trim1}:duration={output_duration},"
             f"asetpts=PTS-STARTPTS[a];"
 
             # Stack clips side by side
-            "[left][right]hstack=inputs=2[stacked];"
+            "[left][right]hstack=inputs=2[clips];"
 
-            # Pad to 1920x1080 with dark background
-            "[stacked]pad=1920:1080:60:287:0x1a1a2e[v]"
+            # Use the artwork as a full-frame background and center the clips over it.
+            f"[2:v]scale=1920:1080:flags=lanczos,setsar=1,"
+            f"trim=duration={output_duration},setpts=PTS-STARTPTS[background];"
+            "[background][clips]overlay=60:287:shortest=1,format=yuv420p[v]"
         ),
 
         # Map filtered video and audio only (no duplicate raw audio map)

@@ -33,7 +33,7 @@ from .services.youtube.uploader import upload_video
 
 JANITOR_INTERVAL_SECONDS = 15 * 60
 JOB_ID_PATTERN = re.compile(r"^[a-f0-9]{32}$")
-OUTPUT_NAME_PATTERN = re.compile(r"^[A-Za-z0-9_-]{1,100}\.mp4$")
+OUTPUT_NAME_PATTERN = re.compile(r"^[A-Za-z0-9_-][A-Za-z0-9_.-]{0,99}\.mp4$")
 RENDER_LOCK = threading.Lock()
 
 
@@ -79,11 +79,11 @@ def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-def safe_output_filename(value: str, job_id: str) -> str:
+def safe_output_filename(value: str) -> str:
     requested = Path(value or "whisk-render").name
-    stem = Path(requested).stem
-    cleaned = re.sub(r"[^A-Za-z0-9_-]+", "_", stem).strip("_-.")[:80]
-    return f"{cleaned or 'whisk-render'}_{job_id[:8]}.mp4"
+    stem = requested[:-4] if requested.lower().endswith(".mp4") else requested
+    cleaned = re.sub(r"[^A-Za-z0-9_.-]+", "_", stem).strip("_-.")[:100]
+    return f"{cleaned or 'whisk-render'}.mp4"
 
 
 def process_render(job_id: str, job_dir: Path, clip1_path: Path, clip2_path: Path, auto_sync: bool, output_name: str) -> None:
@@ -160,7 +160,7 @@ def render(
 
         clip1_path = resolve_media_input(clip1, clip1_url, inputs_dir)
         clip2_path = resolve_media_input(clip2, clip2_url, inputs_dir)
-        output_filename = safe_output_filename(output_name, job_id)
+        output_filename = safe_output_filename(output_name)
         write_job_manifest(
             job_dir,
             schema_version=1,
