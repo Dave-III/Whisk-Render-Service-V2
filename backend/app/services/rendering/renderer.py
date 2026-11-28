@@ -34,8 +34,20 @@ def render_side_by_side(
         clip1_sync = calculate_trim_start(clip1_path, preroll_seconds)
         clip2_sync = calculate_trim_start(clip2_path, preroll_seconds)
 
-        clip1_trim = clip1_sync["trim_start"]
-        clip2_trim = clip2_sync["trim_start"]
+        event1 = clip1_sync["reset_event"]
+        event2 = clip2_sync["reset_event"]
+
+        if event1 is not None and event2 is not None:
+            event1_time = event1["timestamp"]
+            event2_time = event2["timestamp"]
+            shared_preroll = min(preroll_seconds, event1_time, event2_time)
+            clip1_trim = event1_time - shared_preroll
+            clip2_trim = event2_time - shared_preroll
+        else:
+            # Avoid trimming only one clip when a shared marker is unavailable.
+            clip1_trim = 0
+            clip2_trim = 0
+            print("Auto-sync skipped: a matching flash was not found in both clips.")
 
         print("\n=== AUTO SYNC ===")
         print(f"Clip 1 Trim: {clip1_trim:.2f}s")
@@ -148,7 +160,7 @@ def render_side_by_side(
 
         # Map filtered video and audio only (no duplicate raw audio map)
         "-map", "[v]",
-        "-map", "0:a:0?",
+        "-map", "[a]",
 
         # Video codec
         "-c:v", "libx264",
