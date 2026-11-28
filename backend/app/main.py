@@ -4,6 +4,7 @@ import os
 import re
 import shutil
 import threading
+from collections import deque
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
@@ -18,7 +19,6 @@ from .services.media.resolver import resolve_media_input
 from .services.render_status import (
     finish_render,
     get_render_status,
-    render_status,
     reset_render_status,
     set_finalize_stage,
     set_render_error,
@@ -34,7 +34,10 @@ from .services.youtube.uploader import upload_video
 JANITOR_INTERVAL_SECONDS = 15 * 60
 JOB_ID_PATTERN = re.compile(r"^[a-f0-9]{32}$")
 OUTPUT_NAME_PATTERN = re.compile(r"^[A-Za-z0-9_-][A-Za-z0-9_.-]{0,99}\.mp4$")
-RENDER_LOCK = threading.Lock()
+QUEUE_LOCK = threading.Lock()
+RENDER_QUEUE: deque[dict] = deque()
+QUEUE_WORKER_SCHEDULED = False
+ACTIVE_RENDER_JOB_ID: str | None = None
 
 
 async def cleanup_loop() -> None:
@@ -97,10 +100,11 @@ def safe_download_filename(value: str) -> str:
 def process_render(job_id: str, job_dir: Path, clip1_path: Path, clip2_path: Path, auto_sync: bool, output_name: str) -> None:
     try:
         write_job_manifest(job_dir, state="processing", updated_at=utc_now())
+        start_render(job_id)
         if auto_sync:
-            set_sync_stage()
+            set_sync_stage(job_id)
 
-        set_render_stage()
+        set_render_stage(job_id)
         output_path = render_side_by_side(
             clip1_path,
             clip2_path,
@@ -109,10 +113,8 @@ def process_render(job_id: str, job_dir: Path, clip1_path: Path, clip2_path: Pat
             enable_auto_sync=auto_sync,
         )
 
-        set_finalize_stage()
-        render_status["download_url"] = f"/download/{job_id}"
-        render_status["output_filename"] = output_path.name
-        finish_render()
+        set_finalize_stage(job_id)
+        finish_render(job_id, f"/download/{job_id}", output_path.name)
         write_job_manifest(
             job_dir,
             state="complete",
@@ -125,11 +127,27 @@ def process_render(job_id: str, job_dir: Path, clip1_path: Path, clip2_path: Pat
         )
     except Exception as error:
         message = str(error).strip() or "The render failed. Try another pair of clips."
-        set_render_error(message[:1200])
+        set_render_error(job_id, message[:1200])
         write_job_manifest(job_dir, state="failed", updated_at=utc_now(), error=message[:1200])
     finally:
         ACTIVE_JOB_IDS.discard(job_id)
-        RENDER_LOCK.release()
+
+
+def process_render_queue() -> None:
+    global ACTIVE_RENDER_JOB_ID, QUEUE_WORKER_SCHEDULED
+    while True:
+        with QUEUE_LOCK:
+            if not RENDER_QUEUE:
+                ACTIVE_RENDER_JOB_ID = None
+                QUEUE_WORKER_SCHEDULED = False
+                return
+            job = RENDER_QUEUE.popleft()
+            ACTIVE_RENDER_JOB_ID = job["job_id"]
+
+        process_render(**job)
+
+        with QUEUE_LOCK:
+            ACTIVE_RENDER_JOB_ID = None
 
 
 @app.get("/")
@@ -143,8 +161,20 @@ def health_check():
 
 
 @app.get("/render-status")
-def render_status_route():
-    return get_render_status()
+def render_status_route(job_id: str | None = None):
+    status = get_render_status(job_id)
+    if status.get("state") == "queued":
+        with QUEUE_LOCK:
+            queue_position = next(
+                (index + 1 for index, job in enumerate(RENDER_QUEUE) if job["job_id"] == status["job_id"]),
+                None,
+            )
+            status["queue_position"] = queue_position
+            if queue_position is not None:
+                status["stage"] = f"Queued - position {queue_position}"
+    else:
+        status["queue_position"] = None
+    return status
 
 
 @app.post("/render")
@@ -157,9 +187,6 @@ def render(
     auto_sync: bool = Form(True),
     output_name: str = Form("whisk-render"),
 ):
-    if not RENDER_LOCK.acquire(blocking=False):
-        raise HTTPException(status_code=409, detail="A render is already in progress")
-
     job_id = uuid4().hex
     job_dir = JOBS_DIR / job_id
     inputs_dir = job_dir / "inputs"
@@ -168,7 +195,6 @@ def render(
         inputs_dir.mkdir()
         ACTIVE_JOB_IDS.add(job_id)
         reset_render_status(job_id)
-        start_render()
 
         clip1_path = resolve_media_input(clip1, clip1_url, inputs_dir)
         clip2_path = resolve_media_input(clip2, clip2_url, inputs_dir)
@@ -188,27 +214,32 @@ def render(
                 "media_type": "video/mp4",
             },
         )
-        background_tasks.add_task(
-            process_render,
-            job_id,
-            job_dir,
-            clip1_path,
-            clip2_path,
-            auto_sync,
-            output_filename,
-        )
+        job = {
+            "job_id": job_id,
+            "job_dir": job_dir,
+            "clip1_path": clip1_path,
+            "clip2_path": clip2_path,
+            "auto_sync": auto_sync,
+            "output_name": output_filename,
+        }
+        with QUEUE_LOCK:
+            RENDER_QUEUE.append(job)
+            queue_position = len(RENDER_QUEUE) if ACTIVE_RENDER_JOB_ID is not None else len(RENDER_QUEUE)
+            should_start_worker = not QUEUE_WORKER_SCHEDULED
+            if should_start_worker:
+                QUEUE_WORKER_SCHEDULED = True
+        if should_start_worker:
+            background_tasks.add_task(process_render_queue)
     except Exception as error:
         ACTIVE_JOB_IDS.discard(job_id)
         shutil.rmtree(job_dir, ignore_errors=True)
-        reset_render_status()
-        RENDER_LOCK.release()
         if isinstance(error, HTTPException):
             raise
         if isinstance(error, (ValueError, RuntimeError)):
             raise HTTPException(status_code=422, detail=str(error)) from error
         raise HTTPException(status_code=502, detail="Unable to prepare the uploaded clips") from error
 
-    return {"success": True, "job_id": job_id}
+    return {"success": True, "job_id": job_id, "queue_position": queue_position}
 
 
 @app.get("/download/{job_id}")
