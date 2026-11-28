@@ -63,7 +63,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Whisk Render Service", version="2.0", lifespan=lifespan)
 allowed_origins = [
     origin.strip()
-    for origin in os.getenv("WHISK_ALLOWED_ORIGINS", "*").split(",")
+    for origin in os.getenv("WHISK_ALLOWED_ORIGINS", "https://whiskeditor.vercel.app").split(",")
     if origin.strip()
 ]
 app.add_middleware(
@@ -72,6 +72,7 @@ app.add_middleware(
     allow_credentials=False,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["Content-Type"],
+    allow_private_network=True,
 )
 
 
