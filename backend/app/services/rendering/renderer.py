@@ -125,9 +125,12 @@ def render_side_by_side(
 
         # Fast pre-seek before input (lands on keyframe)
         "-ss", str(pre_seek1),
+        # Keep per-frame color-range metadata changes from reinitializing the graph.
+        "-color_range", "tv",
         "-i", str(clip1_path),
 
         "-ss", str(pre_seek2),
+        "-color_range", "tv",
         "-i", str(clip2_path),
 
         # Loop the watercolor artwork as the video canvas background.
@@ -139,11 +142,13 @@ def render_side_by_side(
         (
             # Fine-trim + duration cap + scale for clip 1
             f"[0:v]trim=start={filter_trim1}:duration={output_duration},"
-            f"setpts=PTS-STARTPTS,scale=900:506[left];"
+            f"setpts=PTS-STARTPTS,"
+            f"scale=900:506:in_range=tv:out_range=tv,format=yuv420p[left];"
 
             # Fine-trim + duration cap + scale for clip 2
             f"[1:v]trim=start={filter_trim2}:duration={output_duration},"
-            f"setpts=PTS-STARTPTS,scale=900:506[right];"
+            f"setpts=PTS-STARTPTS,"
+            f"scale=900:506:in_range=tv:out_range=tv,format=yuv420p[right];"
 
             # Audio trim from clip 1 only
             f"[0:a]atrim=start={filter_trim1}:duration={output_duration},"
@@ -153,9 +158,11 @@ def render_side_by_side(
             "[left][right]hstack=inputs=2[clips];"
 
             # Use the artwork as a full-frame background and center the clips over it.
-            f"[2:v]scale=1920:1080:flags=lanczos,setsar=1,"
+            f"[2:v]scale=1920:1080:flags=lanczos:in_range=pc:out_range=tv,"
+            f"setsar=1,format=yuv420p,"
             f"trim=duration={output_duration},setpts=PTS-STARTPTS[background];"
-            "[background][clips]overlay=60:287:shortest=1,format=yuv420p[v]"
+            "[background][clips]overlay=60:287:shortest=1,"
+            "format=yuv420p,setparams=range=tv[v]"
         ),
 
         # Map filtered video and audio only (no duplicate raw audio map)
