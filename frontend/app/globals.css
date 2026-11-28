@@ -1,8 +1,12 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f1e9ff;
+  --foreground: #392b4c;
+  --ink: #392b4c;
+  --ink-soft: #594b68;
+  --muted: #776b83;
+  --line: rgba(106, 82, 133, 0.2);
 }
 
 @theme inline {
@@ -12,15 +16,114 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+html { color-scheme: light; }
 
 body {
+  min-height: 100%;
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+.editor-backdrop {
+  position: relative;
+  isolation: isolate;
+  background-color: #e9dcfb;
+  background-image:
+    radial-gradient(ellipse at 8% 8%, rgba(250, 191, 219, 0.72), transparent 34%),
+    radial-gradient(ellipse at 88% 10%, rgba(164, 158, 239, 0.68), transparent 38%),
+    radial-gradient(ellipse at 52% 95%, rgba(135, 207, 204, 0.46), transparent 36%),
+    linear-gradient(135deg, #f4e8ff 0%, #e5ddff 52%, #e6efff 100%);
+  color: var(--ink);
+}
+
+.editor-backdrop::before {
+  position: absolute;
+  z-index: -1;
+  inset: -12%;
+  content: "";
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 18% 42%, rgba(255, 255, 255, 0.55), transparent 26%),
+    radial-gradient(ellipse at 78% 68%, rgba(251, 185, 220, 0.24), transparent 30%),
+    radial-gradient(ellipse at 54% 18%, rgba(128, 177, 227, 0.2), transparent 30%);
+  filter: blur(22px);
+}
+
+.editor-backdrop .bg-zinc-900 { background-color: rgba(255, 251, 255, 0.78); }
+.editor-backdrop .bg-zinc-800 { background-color: rgba(235, 224, 248, 0.78); }
+.editor-backdrop .bg-zinc-700 { background-color: rgba(216, 201, 235, 0.82); }
+
+.editor-backdrop .border-zinc-800,
+.editor-backdrop .border-zinc-700 { border-color: var(--line); }
+
+.editor-backdrop .text-white { color: var(--ink); }
+.editor-backdrop .text-zinc-300 { color: var(--ink-soft); }
+.editor-backdrop .text-zinc-400,
+.editor-backdrop .text-zinc-500 { color: var(--muted); }
+.editor-backdrop .text-green-400 { color: #367f7d; }
+.editor-backdrop .text-blue-400 { color: #5366ae; }
+.editor-backdrop .text-blue-300 { color: #6174bd; }
+
+.editor-backdrop .bg-blue-600 { background-color: #7887d8; }
+.editor-backdrop .bg-blue-500,
+.editor-backdrop .hover\:bg-blue-500:hover { background-color: #8f9ce6; }
+.editor-backdrop .focus\:border-blue-500:focus { border-color: #8588d8; }
+.editor-backdrop .bg-green-600 { background-color: #488d88; }
+.editor-backdrop .hover\:bg-green-500:hover { background-color: #5aa29c; }
+.editor-backdrop .bg-red-600 { background-color: #bb719d; }
+.editor-backdrop .hover\:bg-red-500:hover { background-color: #cd86ae; }
+.editor-backdrop .border-red-900 { border-color: rgba(175, 87, 133, 0.42); }
+.editor-backdrop .bg-red-950 { background-color: rgba(250, 225, 239, 0.88); }
+.editor-backdrop .text-red-300 { color: #85415e; }
+.editor-backdrop .bg-black\/70.text-white { color: #fff !important; }
+
+.editor-backdrop input[type="text"] {
+  color: var(--ink);
+  border-color: var(--line);
+  border-radius: 0.75rem;
+  box-shadow: inset 0 1px 2px rgba(82, 59, 110, 0.05);
+}
+
+.editor-backdrop input[type="text"]::placeholder { color: #877b93; }
+.editor-backdrop input[type="file"] { color: var(--ink-soft); }
+.editor-backdrop input[type="file"]::file-selector-button { color: var(--ink); }
+.editor-backdrop input[type="checkbox"] { accent-color: #7887d8; }
+
+.editor-toolbar {
+  border-color: rgba(106, 82, 133, 0.2);
+  background: rgba(255, 250, 255, 0.62);
+  box-shadow: 0 8px 24px rgba(72, 48, 103, 0.1);
+  backdrop-filter: blur(16px);
+}
+
+.editor-toolbar h1 {
+  color: var(--ink);
+  font-family: Georgia, "Times New Roman", serif;
+  letter-spacing: 0.015em;
+}
+
+.editor-sidebar,
+.editor-inspector {
+  border-color: var(--line);
+  background: rgba(255, 251, 255, 0.74);
+  box-shadow: 0 14px 34px rgba(72, 48, 103, 0.08);
+  backdrop-filter: blur(18px);
+}
+
+.editor-backdrop .rounded-lg { border-radius: 1rem; }
+.editor-backdrop .rounded-md { border-radius: 0.75rem; }
+
+.editor-backdrop button,
+.editor-backdrop a,
+.editor-backdrop input::file-selector-button { transition-duration: 180ms; }
+
+.editor-backdrop button:not(:disabled):hover,
+.editor-backdrop a:hover,
+.editor-backdrop input::file-selector-button:hover { filter: saturate(1.08); }
+
+@media (prefers-reduced-motion: reduce) {
+  .editor-backdrop button,
+  .editor-backdrop a,
+  .editor-backdrop input::file-selector-button { transition-duration: 0ms; }
 }
