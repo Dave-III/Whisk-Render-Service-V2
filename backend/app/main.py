@@ -33,7 +33,7 @@ from .services.youtube.uploader import upload_video
 
 JANITOR_INTERVAL_SECONDS = 15 * 60
 JOB_ID_PATTERN = re.compile(r"^[a-f0-9]{32}$")
-OUTPUT_NAME_PATTERN = re.compile(r"^[A-Za-z0-9_-]{1,100}\.mp4$")
+OUTPUT_NAME_PATTERN = re.compile(r"^[A-Za-z0-9_-][A-Za-z0-9_.-]{0,99}\.mp4$")
 RENDER_LOCK = threading.Lock()
 
 
@@ -79,11 +79,19 @@ def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-def safe_output_filename(value: str, job_id: str) -> str:
+def safe_output_stem(value: str) -> str:
     requested = Path(value or "whisk-render").name
-    stem = Path(requested).stem
-    cleaned = re.sub(r"[^A-Za-z0-9_-]+", "_", stem).strip("_-.")[:80]
-    return f"{cleaned or 'whisk-render'}_{job_id[:8]}.mp4"
+    stem = requested[:-4] if requested.lower().endswith(".mp4") else requested
+    cleaned = re.sub(r"[^A-Za-z0-9_.-]+", "_", stem).strip("_-.")[:100]
+    return cleaned or "whisk-render"
+
+
+def safe_output_filename(value: str, job_id: str) -> str:
+    return f"{safe_output_stem(value)[:80]}_{job_id[:8]}.mp4"
+
+
+def safe_download_filename(value: str) -> str:
+    return f"{safe_output_stem(value)}.mp4"
 
 
 def process_render(job_id: str, job_dir: Path, clip1_path: Path, clip2_path: Path, auto_sync: bool, output_name: str) -> None:
@@ -161,6 +169,7 @@ def render(
         clip1_path = resolve_media_input(clip1, clip1_url, inputs_dir)
         clip2_path = resolve_media_input(clip2, clip2_url, inputs_dir)
         output_filename = safe_output_filename(output_name, job_id)
+        download_filename = safe_download_filename(output_name)
         write_job_manifest(
             job_dir,
             schema_version=1,
@@ -169,7 +178,11 @@ def render(
             created_at=utc_now(),
             updated_at=utc_now(),
             inputs={"clip1": f"inputs/{clip1_path.name}", "clip2": f"inputs/{clip2_path.name}"},
-            output={"filename": output_filename, "media_type": "video/mp4"},
+            output={
+                "filename": output_filename,
+                "download_filename": download_filename,
+                "media_type": "video/mp4",
+            },
         )
         background_tasks.add_task(
             process_render,
@@ -207,6 +220,7 @@ def download_video(job_id: str):
     try:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         filename = manifest["output"]["filename"]
+        download_filename = manifest["output"].get("download_filename", filename)
         if manifest.get("state") != "complete":
             raise HTTPException(status_code=404, detail="Render output not ready")
     except (OSError, KeyError, TypeError, ValueError):
@@ -218,7 +232,10 @@ def download_video(job_id: str):
     if not file_path.is_file():
         raise HTTPException(status_code=404, detail="Render output not found")
 
-    return FileResponse(file_path, media_type="video/mp4", filename=filename)
+    if not OUTPUT_NAME_PATTERN.fullmatch(download_filename):
+        download_filename = filename
+
+    return FileResponse(file_path, media_type="video/mp4", filename=download_filename)
 
 
 @app.post("/upload-youtube")
