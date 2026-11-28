@@ -190,7 +190,7 @@ export default function Sidebar({
   }
 
   return (
-    <div className="w-80 h-full border-r border-zinc-700 bg-zinc-900 p-4 overflow-y-auto">
+    <div className="editor-sidebar w-80 h-full border-r border-zinc-700 bg-zinc-900 p-4 overflow-y-auto">
       <h2 className="text-sm font-semibold text-white mb-6">
         Upload & Details
       </h2>
