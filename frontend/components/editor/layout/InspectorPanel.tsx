@@ -28,7 +28,7 @@ export default function InspectorPanel({
 
   return (
 
-    <div className="w-80 h-full border-l border-zinc-700 bg-zinc-900 p-4 overflow-y-auto">
+    <div className="editor-inspector w-80 h-full border-l border-zinc-700 bg-zinc-900 p-4 overflow-y-auto">
 
       <h2 className="text-sm font-semibold text-white mb-6">
         Render Output
